@@ -1,12 +1,12 @@
 server:
-  port: 8082
+  port: 8081
 
 spring:
   application:
-    name: product-service
+    name: auth-service
 
   datasource:
-    url: jdbc:mariadb://product-db:3306/product_db
+    url: jdbc:mariadb://auth-db:3306/auth_db
     username: root
     password: root
     driver-class-name: org.mariadb.jdbc.Driver
