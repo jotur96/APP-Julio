@@ -7,6 +7,8 @@ services:
       - auth-service
       - product-service
       - cart-service
+    networks:
+      - backend
 
   auth-service:
     build: ./auth-service
@@ -14,11 +16,15 @@ services:
       - DB_HOST=auth-db
     depends_on:
       - auth-db
+    networks:
+      - backend
 
   product-service:
     build: ./product-service
     depends_on:
       - product-db
+    networks:
+      - backend
 
   cart-service:
     build: ./cart-service
@@ -26,24 +32,32 @@ services:
       - DB_HOST=cart-db
     depends_on:
       - cart-db
+    networks:
+      - backend
 
   auth-db:
     image: mariadb
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: auth_db
+    networks:
+      - backend
 
   product-db:
     image: mariadb
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: product_db
+    networks:
+      - backend
 
   cart-db:
     image: mariadb
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: cart_db
+    networks:
+      - backend
 
   frontend:
     build: ./frontend
@@ -51,3 +65,9 @@ services:
       - "3001:3000"
     depends_on:
       - gateway
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge

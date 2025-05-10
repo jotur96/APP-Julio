@@ -43,9 +43,23 @@ public class UserService {
 
 
     public String login(String email, String password) {
+        if (email == null || password == null) {
+            throw new IllegalArgumentException("Email y contraseña son requeridos");
+        }
+        if (email.isBlank() || password.isBlank()) {
+            throw new IllegalArgumentException("Email y contraseña no pueden estar vacíos");
+        }
+        if (!repo.findByEmail(email).isPresent()) {
+            throw new IllegalArgumentException("Email no registrado");
+        }
         authManager.authenticate(
                 new UsernamePasswordAuthenticationToken(email, password)
         );
-        return jwtUtil.generateToken(email);
+
+        User user = repo.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Email no registrado"));
+
+
+        return jwtUtil.generateToken(user);
     }
 }
