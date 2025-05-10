@@ -3,9 +3,15 @@ package com.carrito.auth_service.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -14,12 +20,8 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                // deshabilita CSRF con el nuevo estilo de lambdas
                 .csrf(AbstractHttpConfigurer::disable)
-
-                // reglas de autorización
                 .authorizeHttpRequests(auth -> auth
-                        // endpoints públicos
                         .requestMatchers(
                                 "/register",
                                 "/login",
@@ -30,10 +32,32 @@ public class SecurityConfig {
                         // todo lo demás requiere autenticación
                         .anyRequest().authenticated()
                 )
-
-                // HTTP Basic (temporal, hasta que implementes JWT)
                 .httpBasic(Customizer.withDefaults());
 
         return http.build();
+    }
+
+
+    @Bean
+    AuthenticationManager authenticationManager(
+            AuthenticationConfiguration config
+    ) throws Exception {
+        return config.getAuthenticationManager();
+    }
+
+    @Bean
+    DaoAuthenticationProvider authProvider(
+            UserDetailsService userDetailsService,
+            PasswordEncoder passwordEncoder
+    ) {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(userDetailsService);
+        provider.setPasswordEncoder(passwordEncoder);
+        return provider;
+    }
+
+    @Bean
+    PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }

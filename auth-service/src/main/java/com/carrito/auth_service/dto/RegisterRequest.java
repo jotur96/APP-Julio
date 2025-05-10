@@ -10,7 +10,6 @@ public class RegisterRequest {
     @NotBlank @Size(min = 6) private String password;
     @NotBlank private String address;
     @NotNull private LocalDate birthDate;
-    // getters y setters
 
 
     public String getFirstName() {

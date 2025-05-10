@@ -1,5 +1,7 @@
 package com.carrito.auth_service.controller;
 
+import com.carrito.auth_service.dto.LoginRequest;
+import com.carrito.auth_service.dto.LoginResponse;
 import com.carrito.auth_service.dto.RegisterRequest;
 import com.carrito.auth_service.dto.RegisterResponse;
 import com.carrito.auth_service.model.User;
@@ -24,5 +26,11 @@ public class AuthController {
         User u = service.register(req);
         RegisterResponse resp = new RegisterResponse(u.getId(), u.getEmail());
         return ResponseEntity.ok(resp);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest req) {
+        String token = service.login(req.getEmail(), req.getPassword());
+        return ResponseEntity.ok(new LoginResponse(token));
     }
 }
