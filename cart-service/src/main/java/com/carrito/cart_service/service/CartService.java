@@ -34,7 +34,6 @@ public class CartService {
 
     @Transactional
     public CartItem addOrUpdateItem(Long userId, Long productId, int quantity) {
-        // 1) validar existencia
         productClient.get()
                 .uri("/{id}", productId)
                 .retrieve()
@@ -45,7 +44,6 @@ public class CartService {
                 .toBodilessEntity()
                 .block();
 
-        // 2) insertar/actualizar carrito
         CartItem item = repo.findByUserIdAndProductId(userId, productId)
                 .orElseGet(() -> new CartItem(userId, productId, 0));
 
