@@ -1,0 +1,54 @@
+version: "3.8"
+services:
+  gateway:
+    build: ./gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - auth-service
+      - product-service
+      - cart-service
+
+  auth-service:
+    build: ./auth-service
+    environment:
+      - DB_HOST=auth-db
+    depends_on:
+      - auth-db
+
+  product-service:
+    build: ./product-service
+    depends_on:
+      - product-db
+
+  cart-service:
+    build: ./cart-service
+    environment:
+      - DB_HOST=cart-db
+    depends_on:
+      - cart-db
+
+  auth-db:
+    image: mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: auth_db
+
+  product-db:
+    image: mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: product_db
+
+  cart-db:
+    image: mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: cart_db
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3001:3000"
+    depends_on:
+      - gateway
