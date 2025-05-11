@@ -1,5 +1,6 @@
 package com.carrito.cart_service.controller;
 
+import com.carrito.cart_service.dto.CartItemResponse;
 import com.carrito.cart_service.model.CartItem;
 import com.carrito.cart_service.service.CartService;
 import jakarta.validation.Valid;
@@ -21,7 +22,7 @@ public class CartController {
     }
 
     @GetMapping
-    public ResponseEntity<List<CartItem>> list(@AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<List<CartItemResponse>> list(@AuthenticationPrincipal Jwt jwt) {
         Long userId = Long.valueOf(jwt.getClaim("userId").toString());
         return ResponseEntity.ok(service.listItems(userId));
     }

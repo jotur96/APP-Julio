@@ -18,19 +18,19 @@ public class DataLoader {
                 repo.save(new Product(
                         "Pelota de fútbol",
                         "Pelota oficial tamaño 5",
-                        new BigDecimal("29.99"),
+                        new BigDecimal("29900"),
                         "https://editorial.uefa.com/resources/025a-0ea944223e16-151ee2d5b032-1000/1914526.jpeg"
                 ));
                 repo.save(new Product(
                         "Raqueta de tenis",
                         "Raqueta ligera de carbono",
-                        new BigDecimal("89.50"),
+                        new BigDecimal("89000"),
                         "https://wilsonstore.cl/cdn/shop/files/WR149811U_0_Blade_98_16x19_V9_GR.png.high-res.jpg"
                 ));
                 repo.save(new Product(
                         "Guantes de boxeo",
                         "Guantes profesionales de entrenamiento",
-                        new BigDecimal("45.00"),
+                        new BigDecimal("45000"),
                         "https://cellshop.com.py/media/catalog/product/4/3/4349839_1_1.jpg"
                 ));
             }

@@ -1,5 +1,7 @@
 package com.carrito.cart_service.service;
 
+import com.carrito.cart_service.dto.CartItemResponse;
+import com.carrito.cart_service.dto.ProductDTO;
 import com.carrito.cart_service.model.CartItem;
 import com.carrito.cart_service.repository.CartItemRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -10,6 +12,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -28,8 +31,25 @@ public class CartService {
                 .build();
     }
 
-    public List<CartItem> listItems(Long userId) {
-        return repo.findByUserId(userId);
+    public List<CartItemResponse> listItems(Long userId) {
+        List<CartItemResponse> cart = new ArrayList<>();
+        List<CartItem> items = repo.findByUserId(userId);
+        for (CartItem item : items) {
+            ProductDTO dto = productClient.get()
+                    .uri("/{id}", item.getProductId())
+                    .retrieve()
+                    .onStatus(s -> s.value() == 404,
+                            resp -> Mono.error(new ResponseStatusException(
+                                    HttpStatus.NOT_FOUND,
+                                    "Producto no existe: " + item.getProductId())))
+                    .bodyToMono(ProductDTO.class)    // ← aquí sí descargas el cuerpo
+                    .block();
+            CartItemResponse cartItem = new CartItemResponse();
+            cartItem.setProduct(dto);
+            cartItem.setQuantity(item.getQuantity());
+            cart.add(cartItem);
+        }
+        return cart;
     }
 
     @Transactional

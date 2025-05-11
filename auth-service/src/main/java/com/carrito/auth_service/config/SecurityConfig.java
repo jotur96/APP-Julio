@@ -26,9 +26,7 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                // lambdas style para deshabilitar CSRF
-                .csrf(csrf -> csrf.disable())
-
+                .csrf(AbstractHttpConfigurer::disable)
                 // tenemos un filtro JWT que quita el Bearer y carga el contexto
                 .addFilterBefore(
                         new JwtAuthenticationFilter(jwtUtil),
