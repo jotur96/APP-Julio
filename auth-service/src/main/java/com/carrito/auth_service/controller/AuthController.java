@@ -32,6 +32,15 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest req) {
+        if (req.getEmail() == null || req.getPassword() == null) {
+            return ResponseEntity.badRequest().body(new LoginResponse("Email y contraseña son requeridos"));
+        }
+        if (req.getEmail().isBlank() || req.getPassword().isBlank()) {
+            return ResponseEntity.badRequest().body(new LoginResponse("Email y contraseña no pueden estar vacíos"));
+        }
+        if (!userRepository.findByEmail(req.getEmail()).isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
         String token = service.login(req.getEmail(), req.getPassword());
         return ResponseEntity.ok(new LoginResponse(token));
     }

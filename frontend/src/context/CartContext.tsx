@@ -27,6 +27,7 @@ interface CartContextType {
   removeItem: (productId: number) => Promise<void>
   clearCart: () => Promise<void>
   checkout: () => Promise<void>
+  updateItemQuantity: (productId: number, quantity: number) => Promise<void>
 }
 
 const CartContext = createContext<CartContextType>({} as CartContextType)
@@ -42,8 +43,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (!token) return
     setLoading(true)
     try {
-      const res = await api.get<CartItem[]>('/cart/items')
-      setItems(res.data)
+      // Llamada real a tu API
+      const res = await api.get<{ product: Producto; quantity: number }[]>('/cart/items')
+      // Normalizamos cada item para incluir productId
+      const mapped: CartItem[] = res.data.map(item => ({
+        productId: item.product.id,
+        quantity: item.quantity,
+        product: item.product,
+      }))
+      setItems(mapped)
     } catch (err: any) {
       setError(err.message || 'Error al cargar carrito')
     } finally {
@@ -52,7 +60,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }
 
   const addItem = async (productId: number, quantity: number) => {
-    if (!token) return router.push('/login')
+    if (!token) {
+      router.push('/login')
+      return
+    }
     setLoading(true)
     try {
       await api.post('/cart/items', { productId, quantity })
@@ -64,12 +75,36 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const updateItemQuantity = async (productId: number, quantity: number) => {
+    if (!token) {
+      router.push('/login')
+      return
+    }
+    setLoading(true)
+    try {
+      await api.post(`/cart/items`, {productId, quantity })
+      setItems(prev =>
+        prev.map(i =>
+          i.productId === productId ? { ...i, quantity } : i
+        )
+      )
+    } catch (err: any) {
+      setError(err.message || 'No se pudo actualizar la cantidad')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const removeItem = async (productId: number) => {
-    if (!token) return router.push('/login')
+    if (!token) {
+      router.push('/login')
+      return
+    }
     setLoading(true)
     try {
       await api.delete(`/cart/items/${productId}`)
-      setItems(items.filter(i => i.productId !== productId))
+      // Filtramos usando productId (que acabamos de normalizar)
+      setItems(prev => prev.filter(i => i.productId !== productId))
     } catch (err: any) {
       setError(err.message || 'No se pudo eliminar el ítem')
     } finally {
@@ -78,7 +113,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }
 
   const clearCart = async () => {
-    if (!token) return router.push('/login')
+    if (!token) {
+      router.push('/login')
+      return
+    }
     setLoading(true)
     try {
       await api.delete('/cart/items')
@@ -91,12 +129,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }
 
   const checkout = async () => {
-    if (!token) return router.push('/login')
+    if (!token) {
+      router.push('/login')
+      return
+    }
     setLoading(true)
     try {
       const res = await api.post<{ orderId: number }>('/cart/orders/checkout')
       setItems([])
-      // opcional: redirigir a detalle de pedido
       router.push(`/orders/${res.data.orderId}`)
     } catch (err: any) {
       setError(err.message || 'Error al realizar checkout')
@@ -105,7 +145,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  // Cada vez que cambie token, recargamos el carrito
   useEffect(() => {
     if (token) fetchCart()
     else setItems([])
@@ -114,7 +153,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   return (
     <CartContext.Provider value={{
       items, loading, error,
-      fetchCart, addItem, removeItem, clearCart, checkout
+      fetchCart, addItem, removeItem, clearCart, checkout, updateItemQuantity
     }}>
       {children}
     </CartContext.Provider>
