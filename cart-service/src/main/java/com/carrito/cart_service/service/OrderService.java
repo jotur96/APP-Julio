@@ -1,5 +1,7 @@
 package com.carrito.cart_service.service;
 
+import com.carrito.cart_service.dto.CartItemResponse;
+import com.carrito.cart_service.dto.OrdersResponse;
 import com.carrito.cart_service.dto.ProductDTO;
 import com.carrito.cart_service.model.CartItem;
 import com.carrito.cart_service.model.Order;
@@ -12,11 +14,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.server.ResponseStatusException;
+import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 public class OrderService {
@@ -73,10 +78,51 @@ public class OrderService {
         return saved.getId();
     }
 
-    public Order findById(Long orderId, Long userId) {
-        return orderRepo.findById(orderId)
-                .filter(o -> o.getUserId().equals(userId))
+    public List<OrdersResponse> findAllByUserId(Long userId) {
+        List<OrdersResponse> orders = new ArrayList<>();
+        List<Order> orderIds = orderRepo.findAllByUserId(userId);
+
+        for (Order orderItem : orderIds) {
+            Long orderId = orderItem.getId();
+            OrdersResponse order = findById(orderId, userId);
+            orders.add(order);
+        }
+
+        return orders;
+    }
+
+    public OrdersResponse findById(Long orderId, Long userId) {
+
+        OrdersResponse orderResponse = new OrdersResponse();
+        List<CartItemResponse> cartItems = new ArrayList<>();
+
+        Order order = orderRepo.findById(orderId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Orden no encontrada"));
+
+        orderResponse.setId(order.getId());
+        orderResponse.setCreatedAt(order.getCreatedAt().toString());
+
+        for (OrderItem oi : order.getItems()) {
+            CartItemResponse cartItem = new CartItemResponse();
+
+            ProductDTO dto = productClient.get()
+                    .uri("/{id}", oi.getProductId())
+                    .retrieve()
+                    .onStatus(s -> s.value() == 404,
+                            resp -> Mono.error(new ResponseStatusException(
+                                    HttpStatus.NOT_FOUND,
+                                    "Producto no existe: " + oi.getProductId())))
+                    .bodyToMono(ProductDTO.class)    // ← aquí sí descargas el cuerpo
+                    .block();
+
+            cartItem.setProduct(dto);
+            cartItem.setQuantity(oi.getQuantity());
+            cartItems.add(cartItem);
+        }
+
+        orderResponse.setItems(cartItems);
+
+        return orderResponse;
     }
 }
 
